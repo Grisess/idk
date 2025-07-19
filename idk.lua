@@ -1,6 +1,5 @@
 local Players = game:GetService("Players")
 local Debris = game:GetService("Debris")
-local UserInputService = game:GetService("UserInputService")
 
 local player = Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
@@ -8,7 +7,6 @@ local humanoid = character:WaitForChild("Humanoid")
 local rootPart = character:WaitForChild("HumanoidRootPart")
 
 local effectActive = false
-local effectCoroutine = nil
 local centerPosition = nil
 
 local RADIUS = 25
@@ -17,9 +15,12 @@ local AFTERIMAGE_DURATION = 0.4
 local AFTERIMAGE_TRANSPARENCY = 0.75
 
 local function createAfterimage()
+    if not character or not rootPart then return end
+
     local afterimage = character:Clone()
-    if afterimage:FindFirstChild("Humanoid") then
-        afterimage.Humanoid:Destroy()
+    local cloneHumanoid = afterimage:FindFirstChild("Humanoid")
+    if cloneHumanoid then
+        cloneHumanoid:Destroy()
     end
     afterimage:SetPrimaryPartCFrame(rootPart.CFrame)
     afterimage.Parent = workspace
@@ -43,7 +44,7 @@ local function startEffect()
     humanoid:SetStateEnabled(Enum.HumanoidStateType.Running, false)
     humanoid:SetStateEnabled(Enum.HumanoidStateType.Jumping, false)
 
-    effectCoroutine = coroutine.create(function()
+    spawn(function()
         while effectActive do
             createAfterimage()
             local angle = math.random() * 2 * math.pi
@@ -55,16 +56,11 @@ local function startEffect()
             task.wait(JUMP_DELAY)
         end
     end)
-    coroutine.resume(effectCoroutine)
 end
 
 local function stopEffect()
     if not effectActive then return end
     effectActive = false
-    if effectCoroutine then
-        coroutine.close(effectCoroutine)
-        effectCoroutine = nil
-    end
     humanoid:SetStateEnabled(Enum.HumanoidStateType.Running, true)
     humanoid:SetStateEnabled(Enum.HumanoidStateType.Jumping, true)
 end
